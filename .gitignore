@@ -1,0 +1,17 @@
+# Publication allowlist: ignore everything unless explicitly listed below.
+# Adding a new release requires adding its exact ZIP and checksum paths here.
+*
+
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/CHANGELOG.md
+
+!/licenses/
+/licenses/*
+!/licenses/OFL.txt
+
+!/dist/
+/dist/*
+!/dist/DustFront-RTS-Demo-zhCN-v1.0.0.zip
+!/dist/DustFront-RTS-Demo-zhCN-v1.0.0.zip.sha256
