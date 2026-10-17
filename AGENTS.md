@@ -1,6 +1,6 @@
 # AGENTS.md
 
-这是 Dust Front RTS Demo 简体中文补丁的发布仓库：只放补丁 ZIP 和给玩家看的文档。补丁在维护者本地构建，构建工具、翻译源文件和工作记录都留在本地。
+这是 Dust Front RTS Demo 简体中文补丁的发布仓库：只放补丁 ZIP 和给玩家看的文档。补丁在维护者的 Windows 上构建，构建工具、翻译源文件和工作记录都留在本地。本地命令用 PowerShell 7 写。
 
 ## 仓库文件
 
@@ -40,7 +40,7 @@
 
 Release 由 `.github/workflows/release.yml` 在推送 `vX.Y.Z` tag 时创建。附件只有补丁 ZIP，正文是 CHANGELOG 对应一节加一行安装说明链接。发布只走这个 workflow。
 
-1. 拿到用户提供的新 ZIP。用 `unzip -l` 确认顶层只有 `DustFront-zhCN/`，并包含 `PatchInstaller.exe`、`manifest.json`、`OFL.txt` 和 `payload/`。
+1. 拿到用户提供的新 ZIP。用 `tar -tf <ZIP>` 确认顶层只有 `DustFront-zhCN/`，并包含 `PatchInstaller.exe`、`manifest.json`、`OFL.txt` 和 `payload/`。
 2. `git rm` 旧 ZIP，把新 ZIP 放到 `dist/DustFront-RTS-Demo-zhCN-vX.Y.Z.zip`。`dist/` 里只有这一个文件。
 3. 在 `CHANGELOG.md` 顶部加一节，标题严格为 `## vX.Y.Z — YYYY-MM-DD`（破折号是 `—`）。第一行写适用的游戏版本，然后列出变化和已知范围，按上面的写法。
 4. 更新 README 的版本号和适用的游戏版本。
