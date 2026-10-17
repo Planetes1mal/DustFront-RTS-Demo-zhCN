@@ -1,11 +1,16 @@
-# Publication allowlist: ignore everything unless explicitly listed below.
-# Adding a new release requires adding its exact ZIP and checksum paths here.
+# Publication allowlist: everything else stays local. See AGENTS.md.
 *
 
 !/.gitignore
 !/.gitattributes
 !/README.md
 !/CHANGELOG.md
+!/AGENTS.md
+
+!/.github/
+!/.github/dependabot.yml
+!/.github/workflows/
+!/.github/workflows/release.yml
 
 !/licenses/
 /licenses/*
@@ -13,5 +18,4 @@
 
 !/dist/
 /dist/*
-!/dist/DustFront-RTS-Demo-zhCN-v1.0.0.zip
-!/dist/DustFront-RTS-Demo-zhCN-v1.0.0.zip.sha256
+!/dist/DustFront-RTS-Demo-zhCN-v*.zip

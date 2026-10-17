@@ -1,0 +1,71 @@
+name: Release
+
+# Push a vX.Y.Z tag to publish. Run manually from the Actions tab to check the
+# newest CHANGELOG version without publishing.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the package and write release notes
+        id: check
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag=$(awk '/^## v/ { print $2; exit }' CHANGELOG.md)
+          fi
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "Version '$tag' is not vX.Y.Z."
+
+          zip="dist/DustFront-RTS-Demo-zhCN-$tag.zip"
+          [ -f "$zip" ] || fail "Missing $zip."
+          others=$(find dist -type f ! -path "$zip")
+          [ -z "$others" ] || fail "dist/ must contain only $zip, found: $others"
+
+          entries=$(unzip -Z1 "$zip")
+          ! grep -v '^DustFront-zhCN/' <<<"$entries" || fail "ZIP must contain only the DustFront-zhCN/ folder."
+          for f in PatchInstaller.exe manifest.json OFL.txt; do
+            grep -qxF "DustFront-zhCN/$f" <<<"$entries" || fail "ZIP is missing DustFront-zhCN/$f."
+          done
+          grep -q '^DustFront-zhCN/payload/' <<<"$entries" || fail "ZIP is missing DustFront-zhCN/payload/."
+
+          heading="## $tag — "
+          [ "$(grep -c "^$heading[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}$" CHANGELOG.md)" = 1 ] \
+            || fail "CHANGELOG.md needs exactly one heading '$heading""YYYY-MM-DD'."
+          # Print the section body without its leading and trailing blank lines.
+          awk -v h="$heading" '
+            index($0, h) == 1 { on = 1; next }
+            on && /^## / { exit }
+            on { line[++n] = $0; if (NF) { if (!first) first = n; last = n } }
+            END { for (i = first; first && i <= last; i++) print line[i] }
+          ' CHANGELOG.md > notes.md
+          [ -s notes.md ] || fail "The CHANGELOG section for $tag is empty."
+          printf '\n安装与恢复方法见 [README](%s/%s/blob/%s/README.md#安装)。\n' \
+            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$tag" >> notes.md
+
+          cat notes.md
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "zip=$zip" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.check.outputs.tag }}
+          ZIP: ${{ steps.check.outputs.zip }}
+        run: gh release create "$TAG" "$ZIP" --title "$TAG" --notes-file notes.md --verify-tag

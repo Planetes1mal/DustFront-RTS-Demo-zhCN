@@ -4,13 +4,7 @@
 
 ## 下载
 
-在本仓库的 [Releases](https://github.com/Planetes1mal/DustFront-RTS-Demo-zhCN/releases) 页面下载对应版本的 ZIP 文件。当前版本的发布文件也保存在仓库中：
-
-- [DustFront-RTS-Demo-zhCN-v1.0.0.zip](dist/DustFront-RTS-Demo-zhCN-v1.0.0.zip)（约 2.9 MB）
-- [SHA-256 校验文件](dist/DustFront-RTS-Demo-zhCN-v1.0.0.zip.sha256)
-- [版本记录](CHANGELOG.md)
-
-请下载补丁 ZIP；GitHub 自动生成的 `Source code (zip)` 和 `Source code (tar.gz)` 是仓库快照，不是安装包。
+在 [Releases](https://github.com/Planetes1mal/DustFront-RTS-Demo-zhCN/releases/latest) 下载 `DustFront-RTS-Demo-zhCN-v1.0.0.zip`。各版本的变化见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 安装
 
@@ -31,18 +25,20 @@ Dust Front RTS Demo/
     └── 使用说明.txt
 ```
 
-安装器会校验文件版本，并把原文件备份到游戏根目录的 `.dustfront-zhcn-backup`。现有的 `.bak` 文件不会被覆盖。游戏版本或文件不匹配时，安装器会停止操作。
+安装器会核对游戏版本，并把原文件备份到游戏根目录的 `.dustfront-zhcn-backup`。
 
 ## 恢复原版
 
-退出游戏，再运行安装器并点击“恢复原版”。恢复前请保留补丁文件夹及 `.dustfront-zhcn-backup`。若 Steam 已更新游戏，不要用旧版补丁或旧备份覆盖新版文件。
+退出游戏，运行安装器并点击“恢复原版”。恢复需要补丁文件夹和 `.dustfront-zhcn-backup`。
+
+Steam 更新游戏后，旧版补丁无法安装，请使用对应的新版本补丁。
 
 ## 问题反馈
 
-反馈问题时，请附游戏版本、补丁版本、截图和复现操作。安装器的完整操作说明随 ZIP 提供。
+在 [Issues](https://github.com/Planetes1mal/DustFront-RTS-Demo-zhCN/issues) 反馈，请附游戏版本、补丁版本、截图和复现步骤。
 
 ## 字体与声明
 
-中文字体基于 [Noto Sans SC](https://github.com/google/fonts/tree/main/ofl/notosanssc)，采用 SIL Open Font License 1.1。补丁包含调整内部名称后的字体子集，版权声明与完整许可见 [licenses/OFL.txt](licenses/OFL.txt)，安装包内也保留该文件。
+中文字体为 [Noto Sans SC](https://github.com/google/fonts/tree/main/ofl/notosanssc) 的子集，采用 SIL Open Font License 1.1，许可见 [licenses/OFL.txt](licenses/OFL.txt)。
 
-这是玩家制作的非官方补丁，不包含完整游戏，与游戏开发者没有官方隶属关系。游戏名称、美术和原始内容的权利归各自权利人所有。字体许可证仅适用于字体，不代表对游戏内容或其他补丁组件授予相同许可。
+这是玩家制作的非官方补丁，与游戏开发者无关。
