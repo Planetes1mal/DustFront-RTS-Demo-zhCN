@@ -23,49 +23,81 @@ jobs:
         id: check
         run: |
           set -euo pipefail
-          fail() { echo "::error::$1"; exit 1; }
+          python3 - <<'PY'
+          import datetime
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import zipfile
 
-          if [ "$GITHUB_REF_TYPE" = tag ]; then
-            tag="$GITHUB_REF_NAME"
-          else
-            tag=$(awk '/^## v/ { print $2; exit }' CHANGELOG.md)
-          fi
-          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "Version '$tag' is not vX.Y.Z."
+          def require(condition, message):
+              if not condition:
+                  raise SystemExit(message)
 
-          zip="dist/DustFront-RTS-Demo-zhCN-$tag.zip"
-          [ -f "$zip" ] || fail "Missing $zip."
-          others=$(find dist -type f ! -path "$zip")
-          [ -z "$others" ] || fail "dist/ must contain only $zip, found: $others"
+          version_pattern = r'(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)(?:-(?:beta|rc)\.[1-9][0-9]*)?'
+          heading_pattern = re.compile(rf'## ({version_pattern}) \(([0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}})\)')
+          section_pattern = re.compile(r'^[ \t]{0,3}##(?:[ \t]|$)')
+          version_heading_pattern = re.compile(r'^[ \t]{0,3}##[ \t]+v?([0-9]+\.[0-9]+\.[0-9]+(?:-(?:beta|rc)\.[0-9]+)?)(?=$|[ \t(])')
+          lines = Path('CHANGELOG.md').read_text(encoding='utf-8-sig').splitlines()
+          headings = [(i, line) for i, line in enumerate(lines) if section_pattern.match(line)]
+          require(headings, 'CHANGELOG.md has no version section.')
+          if os.environ.get('GITHUB_EVENT_NAME') == 'push' and os.environ.get('GITHUB_REF_TYPE') == 'tag':
+              tag = os.environ['GITHUB_REF_NAME']
+              require(re.fullmatch(rf'v{version_pattern}', tag), f'Invalid release tag: {tag}')
+              version = tag[1:]
+          else:
+              latest = heading_pattern.fullmatch(headings[0][1])
+              require(latest, 'The newest CHANGELOG heading must be ## X.Y.Z (YYYY-MM-DD).')
+              version = latest.group(1)
+              tag = 'v' + version
 
-          entries=$(unzip -Z1 "$zip")
-          ! grep -v '^DustFront-zhCN/' <<<"$entries" || fail "ZIP must contain only the DustFront-zhCN/ folder."
-          for f in PatchInstaller.exe manifest.json OFL.txt; do
-            grep -qxF "DustFront-zhCN/$f" <<<"$entries" || fail "ZIP is missing DustFront-zhCN/$f."
-          done
-          grep -q '^DustFront-zhCN/payload/' <<<"$entries" || fail "ZIP is missing DustFront-zhCN/payload/."
+          selected = []
+          for i, line in headings:
+              candidate = version_heading_pattern.match(line)
+              if candidate and candidate.group(1) == version:
+                  selected.append((i, line))
+          require(len(selected) == 1, f'CHANGELOG.md must contain exactly one section for {version}.')
+          start, heading = selected[0]
+          match = heading_pattern.fullmatch(heading)
+          require(match, f'Malformed CHANGELOG heading for {version}.')
+          datetime.date.fromisoformat(match.group(2))
+          end = next((i for i, _ in headings if i > start), len(lines))
+          body = lines[start + 1:end]
+          while body and not body[0].strip():
+              body.pop(0)
+          while body and not body[-1].strip():
+              body.pop()
+          require(body, f'The CHANGELOG section for {version} is empty.')
 
-          heading="## $tag — "
-          [ "$(grep -c "^$heading[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}$" CHANGELOG.md)" = 1 ] \
-            || fail "CHANGELOG.md needs exactly one heading '$heading""YYYY-MM-DD'."
-          # Print the section body without its leading and trailing blank lines.
-          awk -v h="$heading" '
-            index($0, h) == 1 { on = 1; next }
-            on && /^## / { exit }
-            on { line[++n] = $0; if (NF) { if (!first) first = n; last = n } }
-            END { for (i = first; first && i <= last; i++) print line[i] }
-          ' CHANGELOG.md > notes.md
-          [ -s notes.md ] || fail "The CHANGELOG section for $tag is empty."
-          printf '\n安装与恢复方法见 [README](%s/%s/blob/%s/README.md#安装)。\n' \
-            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$tag" >> notes.md
+          package = Path(f'dist/DustFront-RTS-Demo-zhCN-{tag}.zip')
+          require(package.is_file(), f'Missing {package}.')
+          require([p for p in Path('dist').rglob('*') if p.is_file()] == [package], f'dist/ must contain only {package}.')
+          with zipfile.ZipFile(package) as archive:
+              names = archive.namelist()
+              require(len(names) == len(set(names)), 'ZIP contains duplicate paths.')
+              require(all(name.startswith('DustFront-zhCN/') and '\\' not in name and '..' not in name.split('/') for name in names), 'ZIP must contain only paths under DustFront-zhCN/.')
+              for filename in ('PatchInstaller.exe', 'manifest.json', 'OFL.txt'):
+                  require(f'DustFront-zhCN/{filename}' in names, f'ZIP is missing {filename}.')
+              require(any(name.startswith('DustFront-zhCN/payload/') and not name.endswith('/') for name in names), 'ZIP has no payload files.')
+              require(archive.testzip() is None, 'ZIP failed its CRC check.')
+              manifest = json.loads(archive.read('DustFront-zhCN/manifest.json'))
+              require(manifest.get('version') == version, 'Tag, CHANGELOG and package manifest versions must match.')
 
-          cat notes.md
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "zip=$zip" >> "$GITHUB_OUTPUT"
+          Path('notes.md').write_text('\n'.join(body) + '\n', encoding='utf-8')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write(f'tag={tag}\nzip={package.as_posix()}\nprerelease={str("-" in version).lower()}\n')
+          print(Path('notes.md').read_text(encoding='utf-8'), end='')
+          PY
 
       - name: Create GitHub Release
-        if: github.ref_type == 'tag'
+        if: github.event_name == 'push' && github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.check.outputs.tag }}
           ZIP: ${{ steps.check.outputs.zip }}
-        run: gh release create "$TAG" "$ZIP" --title "$TAG" --notes-file notes.md --verify-tag
+          PRERELEASE: ${{ steps.check.outputs.prerelease }}
+        run: |
+          args=(--title "Dust Front RTS Demo 简体中文补丁 $TAG" --notes-file notes.md --verify-tag)
+          if [ "$PRERELEASE" = true ]; then args+=(--prerelease); fi
+          gh release create "$TAG" "$ZIP" "${args[@]}"

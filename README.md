@@ -1,10 +1,10 @@
 # Dust Front RTS Demo 简体中文补丁
 
-非官方简体中文补丁，当前版本 **v1.0.1**，适用于 **Demo D-33 / Steam Build 26004785**。请先通过 Steam 安装对应的游戏 Demo。
+非官方简体中文补丁，当前版本 **v1.1.0**，适用于 **Demo D-35-1 / Steam Build 26104922**。请先通过 Steam 安装对应的游戏 Demo。
 
 ## 下载
 
-在 [Releases](https://github.com/Planetes1mal/DustFront-RTS-Demo-zhCN/releases/latest) 下载 `DustFront-RTS-Demo-zhCN-v1.0.1.zip`。各版本的变化见 [CHANGELOG.md](CHANGELOG.md)。
+在 [Releases](https://github.com/Planetes1mal/DustFront-RTS-Demo-zhCN/releases/latest) 下载 `DustFront-RTS-Demo-zhCN-v1.1.0.zip`。各版本的变化见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 安装
 
@@ -25,11 +25,11 @@ Dust Front RTS Demo/
     └── 使用说明.txt
 ```
 
-安装器会核对游戏版本，并把原文件备份到游戏根目录的 `.dustfront-zhcn-backup-26004785`。
+安装器会核对游戏版本，并把原文件备份到游戏根目录的 `.dustfront-zhcn-backup-26104922`。
 
 ## 恢复原版
 
-退出游戏，运行安装器并点击“恢复原版”。恢复需要补丁文件夹和 `.dustfront-zhcn-backup-26004785`。
+退出游戏，运行安装器并点击“恢复原版”。恢复需要补丁文件夹和 `.dustfront-zhcn-backup-26104922`。
 
 Steam 更新游戏后，旧版补丁无法安装，请使用对应的新版本补丁。
 
